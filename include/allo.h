@@ -11,7 +11,7 @@ void *memcpy(void *dest, const void *src, size_t n);
 void *memset(void *s, int c, size_t n);
 #endif
 
-#define ALLO_MAX_ALLOCATOR_CTX_SIZE 255
+#define ALLO_MAX_ALLOCATOR_CTX_SIZE 128
 
 typedef struct allo {
   void *(*_alloc)(struct allo *self, size_t size);
