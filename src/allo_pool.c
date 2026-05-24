@@ -73,9 +73,10 @@ allo_t make_pool_allocator(allo_t *child, void *buffer, size_t block_size,
 
   pool_context_t *ctx = (pool_context_t *)a._state;
   ctx->child = child;
-  ctx->block_size = block_size < sizeof(pool_free_node_t)
-                        ? sizeof(pool_free_node_t)
-                        : block_size;
+  size_t min_size = sizeof(pool_free_node_t);
+  size_t actual_block_size = block_size < min_size ? min_size : block_size;
+  // Ensure block_size is aligned to pointer size
+  ctx->block_size = (actual_block_size + 7) & ~7;
   ctx->total_blocks = total_blocks;
   ctx->own_buffer = (buffer == NULL);
 
