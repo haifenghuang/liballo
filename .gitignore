@@ -3,3 +3,6 @@ build*/
 
 # Cache directories
 .cache/
+
+# Fuzzing artifacts
+fuzz_*/

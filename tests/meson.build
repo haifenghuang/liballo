@@ -33,7 +33,8 @@ if cc.get_id() == 'clang'
 endif
 
 # Special nostdlib test case (Linux x86_64 only)
-if host_machine.cpu_family() == 'x86_64' and host_machine.system() == 'linux'
+is_afl = cc.get_id() == 'clang' and cc.cmd_array()[0].contains('afl-clang')
+if not is_afl and host_machine.cpu_family() == 'x86_64' and host_machine.system() == 'linux'
     test_page_nostdlib_exe = executable(
         'test_page_nostdlib',
         [
