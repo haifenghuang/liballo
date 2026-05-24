@@ -7,9 +7,14 @@
   #include "allo_page_posix.c"
 #endif
 
+#include <assert.h>
+
 typedef struct {
   size_t page_size;
 } page_context_t;
+
+static_assert(sizeof(page_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
+              "Page allocator context exceeds maximum size");
 
 void *page_alloc_fn(allo_t *self, size_t size) {
   if (size == 0) {

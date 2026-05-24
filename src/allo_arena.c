@@ -1,5 +1,6 @@
 #include "allo.h"
 #include "asan.h"
+#include <assert.h>
 
 typedef struct arena_block {
   struct arena_block *next;
@@ -13,6 +14,9 @@ typedef struct {
   size_t block_size;
   allo_t *child;
 } arena_context_t;
+
+static_assert(sizeof(arena_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
+              "Arena allocator context exceeds maximum size");
 
 static arena_block_t *new_arena_block(allo_t *child, size_t size) {
   arena_block_t *block = allo_alloc(child, sizeof(arena_block_t) + size);

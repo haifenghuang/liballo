@@ -1,11 +1,15 @@
 #include "allo.h"
 #include "asan.h"
+#include <assert.h>
 
 typedef struct {
   void *buffer;
   size_t size;
   size_t offset;
 } allocator_buf_context_t;
+
+static_assert(sizeof(allocator_buf_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
+              "Buffer allocator context exceeds maximum size");
 
 void *buf_alloc_fn(allo_t *self, size_t size) {
   if (size == 0) {

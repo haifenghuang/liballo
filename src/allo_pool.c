@@ -1,5 +1,6 @@
 #include "allo.h"
 #include "asan.h"
+#include <assert.h>
 
 typedef struct pool_free_node {
   struct pool_free_node *next;
@@ -13,6 +14,9 @@ typedef struct {
   int own_buffer;
   allo_t *child;
 } pool_context_t;
+
+static_assert(sizeof(pool_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
+              "Pool allocator context exceeds maximum size");
 
 void *pool_alloc_fn(allo_t *self, size_t size) {
   if (size == 0) {
