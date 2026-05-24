@@ -1,0 +1,80 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build build-essential clang
+
+      - name: Install Meson
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install meson
+
+      - name: Configure build (with sanitizers)
+        env:
+          CC: clang
+          CFLAGS: >-
+            -fsanitize=address,undefined -fno-omit-frame-pointer -g -O1 -fno-sanitize-recover=all
+          LDFLAGS: -fsanitize=address,undefined
+        run: |
+          # Ensure a clean build directory; Meson will pick up CC/CFLAGS from env
+          meson setup build --wipe --reconfigure -Dbuildtype=debug
+
+      - name: Build
+        run: |
+          ninja -C build
+
+      - name: Run tests
+        run: |
+          # Print failing test logs when available
+          meson test -C build --print-errorlogs
+
+  fuzz:
+    # Only run fuzzing for pull requests (skip on push-to-main to keep main fast)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages for fuzzing
+        run: |
+          sudo apt-get update
+          # Try installing afl++ (preferred), fallback to afl
+          sudo apt-get install -y ninja-build build-essential clang python3-pip || true
+          sudo apt-get install -y afl++ || sudo apt-get install -y afl || true
+
+      - name: Install Meson
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install meson
+
+      - name: Prepare AFL build and corpus
+        env:
+          CC: afl-clang-lto
+          CXX: afl-clang-lto++
+        run: |
+          # Use the provided fuzz setup script which prepares build-afl and seeds
+          chmod +x ./scripts/fuzz.sh
+          ./scripts/fuzz.sh
+
+      - name: Run afl-fuzz for 60s
+        env:
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+          AFL_SKIP_CPUFREQ: 1
+        run: |
+          # Run afl-fuzz for 60 seconds. Allow non-zero exit (timeout) so PR check doesn't fail
+          timeout 60s afl-fuzz -i fuzz_in -o fuzz_out -- ./build-afl/tests/fuzz_allocator @@ || true
