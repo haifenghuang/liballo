@@ -22,13 +22,17 @@ endforeach
 # Fuzzer (Clang only)
 cc = meson.get_compiler('c')
 if cc.get_id() == 'clang'
+    fuzz_args = []
+    if not get_option('b_coverage')
+        fuzz_args += ['-fsanitize=fuzzer']
+    endif
     fuzz_exe = executable(
         'fuzz_allocator',
         'fuzz_allocator.c',
         include_directories: liballo_headers,
         link_with: liballo_lib,
-        c_args: ['-fsanitize=fuzzer'],
-        link_args: ['-fsanitize=fuzzer'],
+        c_args: fuzz_args,
+        link_args: fuzz_args,
     )
 endif
 
