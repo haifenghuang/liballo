@@ -35,22 +35,20 @@ if [ -d "tests/fuzz_corpus" ] && [ "$(ls -A tests/fuzz_corpus)" ]; then
 fi
 
 # Fallback/Additional structured seeds
-# (These ensure we always have a good starting point even without a full corpus)
-
-# 1. C Allocator Seed
-[ -f "${IN_DIR}/seed_c" ] || printf "\x00\x00\x00\x64\x04\x00\xC8\x02\x01\xF4\x05" > "${IN_DIR}/seed_c"
-
-# 2. Page Allocator Seed
-[ -f "${IN_DIR}/seed_page" ] || printf "\x01\x00\x10\x00\x04\x20\x00\x01" > "${IN_DIR}/seed_page"
-
-# 3. Arena Allocator Seed
-[ -f "${IN_DIR}/seed_arena" ] || printf "\x03\x10\x00\x00\x00\x64\x04\x0F\xA0" > "${IN_DIR}/seed_arena"
-
-# 4. Pool Allocator Seed
-[ -f "${IN_DIR}/seed_pool" ] || printf "\x04\x40\x00\x64\x00\x00\x40\x04\x00\x40\x01" > "${IN_DIR}/seed_pool"
-
-# 5. Buddy Allocator Seed
-[ -f "${IN_DIR}/seed_buddy" ] || printf "\x05\x00" > "${IN_DIR}/seed_buddy"
+# ONLY create these if the directory is still empty.
+if [ -z "$(ls -A ${IN_DIR})" ]; then
+    echo "[*] No corpus found, creating fallback seeds..."
+    # 1. C Allocator Seed
+    printf "\x00\x00\x00\x64\x04\x00\xC8\x02\x01\xF4\x05" > "${IN_DIR}/seed_c"
+    # 2. Page Allocator Seed
+    printf "\x01\x00\x10\x00\x04\x20\x00\x01" > "${IN_DIR}/seed_page"
+    # 3. Arena Allocator Seed
+    printf "\x03\x10\x00\x00\x00\x64\x04\x0F\xA0" > "${IN_DIR}/seed_arena"
+    # 4. Pool Allocator Seed
+    printf "\x04\x40\x00\x64\x00\x00\x40\x04\x00\x40\x01" > "${IN_DIR}/seed_pool"
+    # 5. Buddy Allocator Seed
+    printf "\x05\x00" > "${IN_DIR}/seed_buddy"
+fi
 
 echo "[+] Initialized corpus in ${IN_DIR}"
 
