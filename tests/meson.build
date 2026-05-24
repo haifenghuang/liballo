@@ -19,6 +19,19 @@ foreach t : test_cases
     test(t, exe)
 endforeach
 
+# Fuzzer (Clang only)
+cc = meson.get_compiler('c')
+if cc.get_id() == 'clang'
+    fuzz_exe = executable(
+        'fuzz_allocator',
+        'fuzz_allocator.c',
+        include_directories: liballo_headers,
+        link_with: liballo_lib,
+        c_args: ['-fsanitize=fuzzer'],
+        link_args: ['-fsanitize=fuzzer'],
+    )
+endif
+
 # Special nostdlib test case (Linux x86_64 only)
 if host_machine.cpu_family() == 'x86_64' and host_machine.system() == 'linux'
     test_page_nostdlib_exe = executable(
