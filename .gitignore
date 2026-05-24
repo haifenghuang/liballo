@@ -1,8 +1,17 @@
-# Build directories
+# Build and Cache
 build*/
-
-# Cache directories
 .cache/
 
-# Fuzzing artifacts
-fuzz_*/
+# Fuzzing
+fuzz_in/
+fuzz_out/
+!tests/fuzz_corpus/
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+
+# Debugging
+vgcore.*
+*.p/
