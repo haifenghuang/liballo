@@ -28,7 +28,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     if (Size < 6) return 0;
 
     // --- 1. Global Configuration via Input ---
-    uint8_t selector = Data[0] % 5;
+    uint8_t selector = Data[0] % 6;
     
     // Determine how many pointers we will track in this run (1 to ABSOLUTE_MAX_POINTERS)
     size_t active_max_pointers = (Data[1] % ABSOLUTE_MAX_POINTERS) + 1;
@@ -85,6 +85,16 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
             child = make_c_allocator();
             a = make_pool_allocator(&child, NULL, pool_block_size, total_blocks);
             is_complex = 3;
+            break;
+        }
+        case 5: // Buddy Allocator
+        {
+            if (offset + 1 > Size) return 0;
+            // Size between 1024 and 1048576 (power of 2)
+            size_t buddy_size = 1ULL << ((Data[offset++] % 11) + 10);
+            child = make_c_allocator();
+            a = make_buddy_allocator(&child, NULL, buddy_size);
+            is_complex = 4;
             break;
         }
         default:
@@ -197,7 +207,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     return 0;
 }
 
-#ifndef __AFL_COMPILER
+#if !defined(FUZZING_DRIVER) && !defined(__AFL_COMPILER)
 #include <stdio.h>
 int main(int argc, char **argv) {
     if (argc < 2) {

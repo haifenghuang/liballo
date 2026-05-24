@@ -6,6 +6,7 @@ test_cases = [
     'test_common',
     'test_page',
     'test_realloc',
+    'test_buddy',
 ]
 
 # Standard tests
@@ -24,7 +25,7 @@ cc = meson.get_compiler('c')
 if cc.get_id() == 'clang'
     fuzz_args = []
     if not get_option('b_coverage')
-        fuzz_args += ['-fsanitize=fuzzer']
+        fuzz_args += ['-fsanitize=fuzzer', '-DFUZZING_DRIVER']
     endif
     fuzz_exe = executable(
         'fuzz_allocator',

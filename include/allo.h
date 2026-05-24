@@ -11,13 +11,15 @@ void *memcpy(void *dest, const void *src, size_t n);
 void *memset(void *s, int c, size_t n);
 #endif
 
+#define ALLO_MAX_ALLOCATOR_CTX_SIZE 255
+
 typedef struct allo {
   void *(*_alloc)(struct allo *self, size_t size);
   void *(*_realloc)(struct allo *self, void *ptr, size_t old_size,
                     size_t new_size);
   void (*_free_mem)(struct allo *self, void *ptr);
   void (*_destroy)(struct allo *self);
-  _Alignas(8) char _state[64];
+  _Alignas(8) char _state[ALLO_MAX_ALLOCATOR_CTX_SIZE];
 } allo_t;
 
 // Wraps the standard C library malloc/free functions.
@@ -45,6 +47,14 @@ allo_t make_arena_allocator(allo_t *child, size_t block_size);
 // uses the child allocator to allocate the pool buffer.
 allo_t make_pool_allocator(allo_t *child, void *buffer, size_t block_size,
                            size_t total_blocks);
+
+// A binary buddy allocator that manages a fixed-size buffer.
+// It allocates memory in powers of two, splitting larger blocks into "buddies"
+// and merging them back together when freed. This significantly reduces
+// external fragmentation compared to simple free lists.
+// If buffer is NULL, it uses the child allocator to allocate the internal
+// memory.
+allo_t make_buddy_allocator(allo_t *child, void *buffer, size_t size);
 
 // Helper functions to make syntax look cleaner
 static inline void *allo_alloc(allo_t *a, size_t size) {

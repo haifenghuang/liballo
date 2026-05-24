@@ -4,6 +4,7 @@ liballo_sources = [
     'allo_arena.c',
     'allo_pool.c',
     'allo_page.c',
+    'allo_buddy.c',
     'allo_utils.c',
 ]
 
