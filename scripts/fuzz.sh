@@ -46,8 +46,9 @@ if [ -z "$(ls -A ${IN_DIR})" ]; then
     printf "\x03\x10\x00\x00\x00\x64\x04\x0F\xA0" > "${IN_DIR}/seed_arena"
     # 4. Pool Allocator Seed
     printf "\x04\x40\x00\x64\x00\x00\x40\x04\x00\x40\x01" > "${IN_DIR}/seed_pool"
-    # 5. Buddy Allocator Seed
-    printf "\x05\x00" > "${IN_DIR}/seed_buddy"
+    # 5. Buddy Allocator Seed (Selector 5)
+    # Alloc(idx 0, 32KB), Alloc(idx 1, 16KB), Alloc(idx 2, 16KB), Free(idx 1), Free(idx 2) -> merge
+    printf "\x05\x00\x00\x00\x00\x80\x00\x04\x40\x00\x08\x40\x00\x05\x09" > "${IN_DIR}/seed_buddy"
 fi
 
 echo "[+] Initialized corpus in ${IN_DIR}"

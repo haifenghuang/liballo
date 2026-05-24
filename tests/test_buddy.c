@@ -55,8 +55,55 @@ void test_buddy_alignment(void) {
   printf("Alignment Buddy tests passed!\n");
 }
 
+void test_buddy_torture(void) {
+  printf("Testing Buddy Allocator: Torture\n");
+  allo_t c_alloc = make_c_allocator();
+  // 128KB buddy allocator
+  allo_t buddy = make_buddy_allocator(&c_alloc, NULL, 128 * 1024);
+
+  void *ptrs[1024];
+  size_t sizes[1024];
+  int count = 0;
+
+  // 1. Allocate many small blocks to force deep splits
+  for (int i = 0; i < 64; ++i) {
+    ptrs[count] = allo_alloc(&buddy, 1024);
+    assert(ptrs[count] != NULL);
+    sizes[count] = 1024;
+    memset(ptrs[count], 0xCC, 1024);
+    count++;
+  }
+
+  // 2. Allocate some large blocks
+  ptrs[count] = allo_alloc(&buddy, 32 * 1024);
+  assert(ptrs[count] != NULL);
+  sizes[count] = 32 * 1024;
+  count++;
+
+  // 3. Free everything to force coalescing
+  for (int i = 0; i < count; ++i) {
+    allo_free(&buddy, ptrs[i]);
+  }
+
+  // 4. Try to allocate the whole thing again (proves perfect coalescing)
+  void *big = allo_alloc(&buddy, 128 * 1024);
+  assert(big != NULL);
+  allo_free(&buddy, big);
+
+  // 5. Randomish sequence
+  for (int i = 0; i < 100; ++i) {
+    void *p = allo_alloc(&buddy, (i % 7 + 1) * 1024);
+    if (p) allo_free(&buddy, p);
+  }
+
+  allo_destroy(&buddy);
+  allo_destroy(&c_alloc);
+  printf("Buddy torture tests passed!\n");
+}
+
 int main(void) {
   test_buddy_basic();
   test_buddy_alignment();
+  test_buddy_torture();
   return 0;
 }

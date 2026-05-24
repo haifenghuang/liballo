@@ -50,7 +50,7 @@ if not is_afl and host_machine.cpu_family() == 'x86_64' and host_machine.system(
         include_directories: liballo_headers,
         c_args: ['-DALLO_NOSTDLIB', '-ffreestanding', '-fno-stack-protector'],
         link_args: ['-nostdlib', '-static'],
-        override_options: ['b_sanitize=none'],
+        override_options: ['b_sanitize=none', 'b_coverage=false'],
     )
     test('test_page_nostdlib', test_page_nostdlib_exe)
 endif
