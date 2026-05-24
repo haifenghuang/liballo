@@ -24,14 +24,10 @@ jobs:
           python3 -m pip install meson
 
       - name: Configure build (with sanitizers)
-        env:
-          CC: clang
-          CFLAGS: >-
-            -fsanitize=address,undefined -fno-omit-frame-pointer -g -O1 -fno-sanitize-recover=all
-          LDFLAGS: -fsanitize=address,undefined
         run: |
-          # Ensure a clean build directory; Meson will pick up CC/CFLAGS from env
-          meson setup build --wipe --reconfigure -Dbuildtype=debug
+          # Configure Meson to enable sanitizers so per-target override_options can
+          # disable sanitizers for special test cases (e.g. nostdlib tests).
+          meson setup build --wipe --reconfigure -Db_sanitize=address,undefined -Dbuildtype=debug
 
       - name: Build
         run: |
