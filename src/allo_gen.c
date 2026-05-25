@@ -3,9 +3,9 @@
 #include "allo_mem.h"
 
 #define POOL_COUNT 8
-#define BUDDY_TOTAL_SIZE (16 * 1024 * 1024) // 16MB for buddy
-#define SMALL_OBJ_LIMIT 2048
-#define MEDIUM_OBJ_LIMIT (1024 * 1024)
+#define BUDDY_TOTAL_SIZE (16UL * 1024UL * 1024UL) // 16MB for buddy
+#define SMALL_OBJ_LIMIT 2048UL
+#define MEDIUM_OBJ_LIMIT (1024UL * 1024UL)
 
 static const size_t pool_sizes[POOL_COUNT] = {16,  32,  64,   128,
                                               256, 512, 1024, 2048};
