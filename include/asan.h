@@ -11,15 +11,15 @@
   #define ALLOC_POISON(addr, size) ASAN_POISON_MEMORY_REGION(addr, size)
   #define ALLOC_UNPOISON(addr, size) ASAN_UNPOISON_MEMORY_REGION(addr, size)
 #elif defined(__clang__)
-  /* clang supports __has_feature */
-#  if __has_feature(address_sanitizer)
-#    include <sanitizer/asan_interface.h>
-#    define ALLOC_POISON(addr, size) ASAN_POISON_MEMORY_REGION(addr, size)
-#    define ALLOC_UNPOISON(addr, size) ASAN_UNPOISON_MEMORY_REGION(addr, size)
-#  else
-#    define ALLOC_POISON(addr, size) ((void)(addr), (void)(size))
-#    define ALLOC_UNPOISON(addr, size) ((void)(addr), (void)(size))
-#  endif
+/* clang supports __has_feature */
+  #if __has_feature(address_sanitizer)
+    #include <sanitizer/asan_interface.h>
+    #define ALLOC_POISON(addr, size) ASAN_POISON_MEMORY_REGION(addr, size)
+    #define ALLOC_UNPOISON(addr, size) ASAN_UNPOISON_MEMORY_REGION(addr, size)
+  #else
+    #define ALLOC_POISON(addr, size) ((void)(addr), (void)(size))
+    #define ALLOC_UNPOISON(addr, size) ((void)(addr), (void)(size))
+  #endif
 #elif defined(__GNUC__) && (__GNUC__ >= 14)
   /* GCC 14+ implements __has_feature compatibility */
   #include <sanitizer/asan_interface.h>
