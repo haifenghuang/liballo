@@ -1,7 +1,7 @@
 #include "allo.h"
 #include "allo_asan.h"
-#include "allo_mem.h"
 #include "allo_assert.h"
+#include "allo_mem.h"
 
 #include <stdbool.h>
 #include <stdint.h>
