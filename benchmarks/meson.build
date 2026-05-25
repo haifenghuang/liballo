@@ -15,4 +15,8 @@ bench_allocators_exe = executable(
     dependencies: [ubench_dep, m_dep],
 )
 
-benchmark('bench_allocators', bench_allocators_exe)
+benchmark(
+    'bench_allocators',
+    bench_allocators_exe,
+    timeout: 60,
+)

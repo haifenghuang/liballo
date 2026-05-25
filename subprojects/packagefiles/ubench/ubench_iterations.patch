@@ -1,0 +1,11 @@
+--- a/ubench.h
++++ b/ubench.h
+@@ -748,7 +748,7 @@
+     struct ubench_run_state_s ubs;
+ 
+ #define UBENCH_MIN_ITERATIONS 10
+-#define UBENCH_MAX_ITERATIONS 500
++#define UBENCH_MAX_ITERATIONS 250000
+     ubench_int64_t iterations = 10;
+     const ubench_int64_t max_iterations = UBENCH_MAX_ITERATIONS;
+     const ubench_int64_t min_iterations = UBENCH_MIN_ITERATIONS;

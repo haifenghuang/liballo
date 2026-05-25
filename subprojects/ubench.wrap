@@ -2,6 +2,7 @@
 url = https://github.com/sheredom/ubench.h.git
 revision = 37f2f0cf90efd220c6c39fbfcae53410e39cf823
 patch_directory = ubench
+diff_files = ubench/ubench_iterations.patch
 
 [provide]
 ubench = ubench_dep
