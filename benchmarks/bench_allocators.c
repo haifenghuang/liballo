@@ -292,6 +292,71 @@ DEFINE_LIFECYCLE_BENCHMARK(buddy, {
   allo_destroy(&a);
   allo_destroy(&child);
 })
+DEFINE_LIFECYCLE_BENCHMARK(mtx, {
+  allo_t base, a;
+  make_c_allocator(&base);
+  make_mtx_allocator(&a, &base);
+  allo_destroy(&a);
+  allo_destroy(&base);
+})
+
+// --- Thread-Safe (Locking) Benchmarks ---
+
+struct mtx_fixture {
+  allo_t base;
+  allo_t a;
+};
+UBENCH_F_SETUP(mtx_fixture) {
+  make_c_allocator(&ubench_fixture->base);
+  make_mtx_allocator(&ubench_fixture->a, &ubench_fixture->base);
+}
+UBENCH_F_TEARDOWN(mtx_fixture) {
+  allo_destroy(&ubench_fixture->a);
+  allo_destroy(&ubench_fixture->base);
+}
+
+UBENCH_F(mtx_fixture, alloc_free_8b) {
+  void *ptr = allo_alloc(&ubench_fixture->a, 8);
+  ubench_do_nothing(ptr);
+  allo_free(&ubench_fixture->a, ptr, 8);
+}
+
+// --- Fallback Benchmarks ---
+
+struct fallback_fixture {
+  allo_t primary;
+  allo_t fallback;
+  allo_t fb;
+  void *pool_buf;
+};
+UBENCH_F_SETUP(fallback_fixture) {
+  size_t pool_size = 64 * 1024;
+  ubench_fixture->pool_buf = malloc(pool_size);
+  make_pool_allocator(&ubench_fixture->primary, NULL, ubench_fixture->pool_buf,
+                      64, 1000);
+  make_c_allocator(&ubench_fixture->fallback);
+  make_fallback_allocator(&ubench_fixture->fb, &ubench_fixture->primary,
+                          &ubench_fixture->fallback);
+}
+UBENCH_F_TEARDOWN(fallback_fixture) {
+  allo_destroy(&ubench_fixture->fb);
+  allo_destroy(&ubench_fixture->primary);
+  allo_destroy(&ubench_fixture->fallback);
+  free(ubench_fixture->pool_buf);
+}
+
+UBENCH_F(fallback_fixture, fast_path_8b) {
+  void *ptr = allo_alloc(&ubench_fixture->fb, 8);
+  ubench_do_nothing(ptr);
+  allo_free(&ubench_fixture->fb, ptr, 8);
+}
+
+UBENCH_F(fallback_fixture, slow_path_1kb) {
+  // 1KB doesn't fit in 64B pool, goes to fallback
+  void *ptr = allo_alloc(&ubench_fixture->fb, 1024);
+  ubench_do_nothing(ptr);
+  allo_free(&ubench_fixture->fb, ptr, 1024);
+}
 
 UBENCH_STATE();
 

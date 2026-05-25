@@ -100,9 +100,18 @@ void *buddy_alloc_fn(allo_t *self, size_t size) {
   return node;
 }
 
+allo_contains_t buddy_contains_fn(allo_t *self, void *ptr) {
+  buddy_context_t *ctx = (buddy_context_t *)self->_state;
+  return (ptr >= ctx->buffer &&
+          (char *)ptr < (char *)ctx->buffer + ctx->total_size)
+             ? ALLO_CONTAINS_YES
+             : ALLO_CONTAINS_NO;
+}
+
 void buddy_free_fn(allo_t *self, void *ptr, size_t size) {
   if (!ptr)
     return;
+  assert(buddy_contains_fn(self, ptr) == ALLO_CONTAINS_YES);
   buddy_context_t *ctx = (buddy_context_t *)self->_state;
 
   int order = get_order(size);
@@ -153,6 +162,7 @@ void buddy_free_fn(allo_t *self, void *ptr, size_t size) {
 
 void *buddy_realloc_fn(allo_t *self, void *ptr, size_t old_size,
                        size_t new_size) {
+  assert(ptr == NULL || buddy_contains_fn(self, ptr) == ALLO_CONTAINS_YES);
   if (!ptr)
     return buddy_alloc_fn(self, new_size);
   if (new_size == 0) {
@@ -201,7 +211,8 @@ allo_error_t make_buddy_allocator(allo_t *out, allo_t *child, void *buffer,
   *out = (allo_t){._alloc = buddy_alloc_fn,
                   ._realloc = buddy_realloc_fn,
                   ._free_mem = buddy_free_fn,
-                  ._destroy = buddy_destroy_fn};
+                  ._destroy = buddy_destroy_fn,
+                  ._contains = buddy_contains_fn};
 
   buddy_context_t *ctx = (buddy_context_t *)out->_state;
   ctx->child = child;

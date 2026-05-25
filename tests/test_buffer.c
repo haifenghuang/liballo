@@ -9,7 +9,8 @@ void test_buffer_validation(void) {
   allo_t a;
   assert(make_fixed_buf_allocator(NULL, NULL, 0) == ALLO_ERR_INVAL);
   assert(make_fixed_buf_allocator(&a, NULL, 0) == ALLO_ERR_INVAL);
-  assert(make_fixed_buf_allocator(&a, (void *)1, 1024) == ALLO_ERR_INVAL); // Unaligned
+  assert(make_fixed_buf_allocator(&a, (void *)1, 1024) ==
+         ALLO_ERR_INVAL); // Unaligned
 
   char buffer[64];
   void *unaligned = (void *)((uintptr_t)buffer + 1);

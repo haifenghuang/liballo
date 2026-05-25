@@ -32,6 +32,13 @@ void *buf_alloc_fn(allo_t *self, size_t size) {
   return ptr;
 }
 
+allo_contains_t buf_contains_fn(allo_t *self, void *ptr) {
+  allocator_buf_context_t *ctx = (allocator_buf_context_t *)self->_state;
+  return (ptr >= ctx->buffer && (char *)ptr < (char *)ctx->buffer + ctx->size)
+             ? ALLO_CONTAINS_YES
+             : ALLO_CONTAINS_NO;
+}
+
 void *buf_realloc_fn(allo_t *self, void *ptr, size_t old_size,
                      size_t new_size) {
   allocator_buf_context_t *ctx = (allocator_buf_context_t *)self->_state;
@@ -71,8 +78,7 @@ void *buf_realloc_fn(allo_t *self, void *ptr, size_t old_size,
 }
 
 void buf_free_fn(allo_t *self, void *ptr, size_t size) {
-  (void)self;
-  if (ptr) {
+  if (ptr && buf_contains_fn(self, ptr) == ALLO_CONTAINS_YES) {
     ALLOC_POISON(ptr, size);
   }
 }
@@ -94,7 +100,8 @@ allo_error_t make_fixed_buf_allocator(allo_t *out, void *buffer, size_t size) {
   *out = (allo_t){._alloc = buf_alloc_fn,
                   ._realloc = buf_realloc_fn,
                   ._free_mem = buf_free_fn,
-                  ._destroy = buf_destroy_fn};
+                  ._destroy = buf_destroy_fn,
+                  ._contains = buf_contains_fn};
 
   allocator_buf_context_t *ctx = (allocator_buf_context_t *)out->_state;
   ctx->buffer = buffer;

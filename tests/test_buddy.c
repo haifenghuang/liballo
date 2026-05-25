@@ -10,7 +10,8 @@ void test_buddy_basic(void) {
   assert(make_c_allocator(&c_alloc) == ALLO_OK);
   // 1MB buddy allocator
   allo_t buddy;
-  assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 1024 * 1024UL) == ALLO_OK);
+  assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 1024 * 1024UL) ==
+         ALLO_OK);
 
   void *p1 = allo_alloc(
       &buddy,

@@ -100,7 +100,8 @@ allo_error_t make_page_allocator(allo_t *out) {
   *out = (allo_t){._alloc = page_alloc_fn,
                   ._realloc = page_realloc_fn,
                   ._free_mem = page_free_fn,
-                  ._destroy = page_destroy_fn};
+                  ._destroy = page_destroy_fn,
+                  ._contains = NULL};
 
   page_context_t *ctx = (page_context_t *)out->_state;
   ctx->page_size = os_get_page_size();

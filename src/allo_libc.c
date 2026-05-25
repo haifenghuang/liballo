@@ -47,6 +47,7 @@ allo_error_t make_c_allocator(allo_t *out) {
   *out = (allo_t){._alloc = c_alloc_fn,
                   ._realloc = c_realloc_fn,
                   ._free_mem = c_free_fn,
-                  ._destroy = NULL};
+                  ._destroy = NULL,
+                  ._contains = NULL};
   return ALLO_OK;
 }

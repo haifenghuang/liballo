@@ -1,6 +1,7 @@
 #ifndef ALLO_H
 #define ALLO_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifndef ALLO_NOSTDLIB
@@ -43,12 +44,19 @@ typedef enum {
  * interact with the allocator.
  *
  */
+typedef enum {
+  ALLO_CONTAINS_NO = 0,
+  ALLO_CONTAINS_YES = 1,
+  ALLO_CONTAINS_UNKNOWN = 2,
+} allo_contains_t;
+
 typedef struct allo {
   void *(*_alloc)(struct allo *self, size_t size);
   void *(*_realloc)(struct allo *self, void *ptr, size_t old_size,
                     size_t new_size);
   void (*_free_mem)(struct allo *self, void *ptr, size_t size);
   void (*_destroy)(struct allo *self);
+  allo_contains_t (*_contains)(struct allo *self, void *ptr);
   _Alignas(8) char _state[ALLO_MAX_ALLOCATOR_CTX_SIZE];
 } allo_t;
 
@@ -112,6 +120,20 @@ allo_error_t make_pool_allocator(allo_t *out, allo_t *child, void *buffer,
 allo_error_t make_buddy_allocator(allo_t *out, allo_t *child, void *buffer,
                                   size_t size);
 
+/*
+ * A thread-safe wrapper that adds a mutex around an existing allocator.
+ *
+ * It uses C11 `mtx_t` to ensure that only one thread can access the target
+ * allocator at a time.
+ */
+allo_error_t make_mtx_allocator(allo_t *out, allo_t *target);
+
+/*
+ * A fallback allocator that tries a primary allocator first, then a secondary.
+ */
+allo_error_t make_fallback_allocator(allo_t *out, allo_t *primary,
+                                     allo_t *fallback);
+
 /**
  * Allocates memory using the provided allocator.
  * If the allocation fails, it returns NULL.
@@ -139,6 +161,21 @@ static inline void allo_destroy(allo_t *a) {
   if (a->_destroy) {
     a->_destroy(a);
   }
+}
+
+/**
+ * Returns a tristate value indicating if the allocator contains the pointer.
+ *
+ * - ALLO_CONTAINS_YES: Pointer definitely belongs to this allocator.
+ * - ALLO_CONTAINS_NO: Pointer definitely does NOT belong to this allocator.
+ * - ALLO_CONTAINS_UNKNOWN: Allocator does not track this information (e.g.
+ * Libc).
+ */
+static inline allo_contains_t allo_contains(allo_t *a, void *ptr) {
+  if (a->_contains) {
+    return a->_contains(a, ptr);
+  }
+  return ALLO_CONTAINS_UNKNOWN;
 }
 
 /**

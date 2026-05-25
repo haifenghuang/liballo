@@ -18,6 +18,14 @@ typedef struct {
 static_assert(sizeof(pool_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
               "Pool allocator context exceeds maximum size");
 
+allo_contains_t pool_contains_fn(allo_t *self, void *ptr) {
+  pool_context_t *ctx = (pool_context_t *)self->_state;
+  size_t total_size = ctx->block_size * ctx->total_blocks;
+  return (ptr >= ctx->buffer && (char *)ptr < (char *)ctx->buffer + total_size)
+             ? ALLO_CONTAINS_YES
+             : ALLO_CONTAINS_NO;
+}
+
 void *pool_alloc_fn(allo_t *self, size_t size) {
   if (size == 0) {
     return NULL;
@@ -40,6 +48,7 @@ void *pool_alloc_fn(allo_t *self, size_t size) {
 
 void *pool_realloc_fn(allo_t *self, void *ptr, size_t old_size,
                       size_t new_size) {
+  assert(ptr == NULL || pool_contains_fn(self, ptr) == ALLO_CONTAINS_YES);
   pool_context_t *ctx = (pool_context_t *)self->_state;
   (void)old_size;
 
@@ -53,6 +62,7 @@ void *pool_realloc_fn(allo_t *self, void *ptr, size_t old_size,
 void pool_free_fn(allo_t *self, void *ptr, size_t size) {
   if (!ptr)
     return;
+  assert(pool_contains_fn(self, ptr) == ALLO_CONTAINS_YES);
   (void)size;
   pool_context_t *ctx = (pool_context_t *)self->_state;
   pool_free_node_t *node = (pool_free_node_t *)ptr;
@@ -80,7 +90,8 @@ allo_error_t make_pool_allocator(allo_t *out, allo_t *child, void *buffer,
   *out = (allo_t){._alloc = pool_alloc_fn,
                   ._realloc = pool_realloc_fn,
                   ._free_mem = pool_free_fn,
-                  ._destroy = pool_destroy_fn};
+                  ._destroy = pool_destroy_fn,
+                  ._contains = pool_contains_fn};
 
   pool_context_t *ctx = (pool_context_t *)out->_state;
   ctx->child = child;

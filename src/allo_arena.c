@@ -20,6 +20,31 @@ typedef struct {
 static_assert(sizeof(arena_context_t) <= ALLO_MAX_ALLOCATOR_CTX_SIZE,
               "Arena allocator context exceeds maximum size");
 
+allo_contains_t arena_contains_fn(allo_t *self, void *ptr) {
+  arena_context_t *ctx = (arena_context_t *)self->_state;
+
+  // Optimization: check current block first
+  char *block_start = (char *)ctx->current + sizeof(arena_block_t);
+  char *block_end = block_start + ctx->current->size;
+  if (ptr >= (void *)block_start && ptr < (void *)block_end) {
+    return ALLO_CONTAINS_YES;
+  }
+
+  // Fallback to iterating all blocks
+  arena_block_t *curr = ctx->first;
+  while (curr) {
+    if (curr != ctx->current) { // Already checked
+      block_start = (char *)curr + sizeof(arena_block_t);
+      block_end = block_start + curr->size;
+      if (ptr >= (void *)block_start && ptr < (void *)block_end) {
+        return ALLO_CONTAINS_YES;
+      }
+    }
+    curr = curr->next;
+  }
+  return ALLO_CONTAINS_NO;
+}
+
 static arena_block_t *new_arena_block(allo_t *child, size_t size) {
   arena_block_t *block = allo_alloc(child, sizeof(arena_block_t) + size);
   if (!block)
@@ -116,8 +141,7 @@ void *arena_realloc_fn(allo_t *self, void *ptr, size_t old_size,
 }
 
 void arena_free_fn(allo_t *self, void *ptr, size_t size) {
-  (void)self;
-  if (ptr) {
+  if (ptr && arena_contains_fn(self, ptr) == ALLO_CONTAINS_YES) {
     ALLOC_POISON(ptr, size);
   }
 }
@@ -141,7 +165,8 @@ allo_error_t make_arena_allocator(allo_t *out, allo_t *child,
   *out = (allo_t){._alloc = arena_alloc_fn,
                   ._realloc = arena_realloc_fn,
                   ._free_mem = arena_free_fn,
-                  ._destroy = arena_destroy_fn};
+                  ._destroy = arena_destroy_fn,
+                  ._contains = arena_contains_fn};
 
   arena_context_t *ctx = (arena_context_t *)out->_state;
   ctx->child = child;
