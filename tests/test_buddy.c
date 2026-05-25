@@ -70,14 +70,12 @@ void test_buddy_torture(void) {
   assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 128 * 1024) == ALLO_OK);
 
   void *ptrs[1024];
-  size_t sizes[1024];
   int count = 0;
 
   // 1. Allocate many small blocks to force deep splits
   for (int i = 0; i < 64; ++i) {
     ptrs[count] = allo_alloc(&buddy, 1024);
     assert(ptrs[count] != NULL);
-    sizes[count] = 1024;
     memset(ptrs[count], 0xCC, 1024);
     count++;
   }
@@ -85,7 +83,6 @@ void test_buddy_torture(void) {
   // 2. Allocate some large blocks
   ptrs[count] = allo_alloc(&buddy, 32 * 1024);
   assert(ptrs[count] != NULL);
-  sizes[count] = 32 * 1024;
   count++;
 
   // 3. Free everything to force coalescing
