@@ -7,6 +7,7 @@ liballo_sources = [
     'allo_buddy.c',
     'allo_utils.c',
     'allo_fallback.c',
+    'allo_gen.c',
 ]
 
 deps = []
