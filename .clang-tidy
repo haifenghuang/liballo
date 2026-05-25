@@ -5,4 +5,5 @@ Checks: >
   performance-*,
   portability-*,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  -bugprone-easily-swappable-parameters
 HeaderFilterRegex: '^(src|include|tests)/'
