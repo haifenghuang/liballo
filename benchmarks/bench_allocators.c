@@ -110,6 +110,17 @@ UBENCH_F_TEARDOWN(buffer_fixture) {
   free(ubench_fixture->buf);
 }
 
+// Gen
+struct gen_fixture {
+  allo_t a;
+};
+UBENCH_F_SETUP(gen_fixture) {
+  make_gen_allocator(&ubench_fixture->a);
+}
+UBENCH_F_TEARDOWN(gen_fixture) {
+  allo_destroy(&ubench_fixture->a);
+}
+
 #define REPEAT_COUNT 1000
 
 // --- Basic Alloc/Free Benchmarks ---
@@ -130,6 +141,10 @@ DEFINE_ALLOC_FREE_BENCHMARK(64kb, libc_fixture, 64 * 1024)
 DEFINE_ALLOC_FREE_BENCHMARK(8b, buddy_fixture, 8)
 DEFINE_ALLOC_FREE_BENCHMARK(1kb, buddy_fixture, 1024)
 DEFINE_ALLOC_FREE_BENCHMARK(64kb, buddy_fixture, 64 * 1024)
+
+DEFINE_ALLOC_FREE_BENCHMARK(8b, gen_fixture, 8)
+DEFINE_ALLOC_FREE_BENCHMARK(1kb, gen_fixture, 1024)
+DEFINE_ALLOC_FREE_BENCHMARK(64kb, gen_fixture, 64 * 1024)
 
 DEFINE_ALLOC_FREE_BENCHMARK(64b, pool_fixture, 64)
 
@@ -252,6 +267,7 @@ static void init_race_state(void) {
 
 DEFINE_RACE_BENCHMARK(libc, libc_fixture)
 DEFINE_RACE_BENCHMARK(buddy, buddy_fixture)
+DEFINE_RACE_BENCHMARK(gen, gen_fixture)
 
 // --- Individual Allocator "Signature" ---
 
