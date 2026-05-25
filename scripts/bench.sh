@@ -8,9 +8,9 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${PROJECT_ROOT}/build-bench"
 
 # Configuration
-CONFIDENCE="${1:-2.5}"
+CONFIDENCE="${1:-5}"
 
-echo "===> Setting up benchmark build (Sanitizers DISABLED for timing accuracy)..."
+echo "===> Setting up benchmark build..."
 if [ ! -d "${BUILD_DIR}" ]; then
     meson setup "${BUILD_DIR}" \
         -Db_sanitize=none \
