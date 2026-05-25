@@ -237,7 +237,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-#if !defined(FUZZING_DRIVER) && !defined(__AFL_COMPILER)
+#ifndef FUZZING_DRIVER
   #include <stdio.h>
 int main(int argc, char **argv) {
   if (argc < 2) {

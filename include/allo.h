@@ -44,11 +44,6 @@ typedef struct allo {
 } allo_t;
 
 /*
- * Wraps the standard C library malloc/free functions.
- */
-allo_error_t make_c_allocator(allo_t *out);
-
-/*
  * The most fundamental allocator, directly requesting pages from the OS.
  *
  * Each allocation is rounded up to the nearest page size and is page-aligned.
@@ -104,6 +99,13 @@ allo_error_t make_buddy_allocator(allo_t *out, allo_t *child, void *buffer,
                                   size_t size);
 
 /*
+ * A fallback allocator that tries a primary allocator first, then a secondary.
+ */
+allo_error_t make_fallback_allocator(allo_t *out, allo_t *primary,
+                                     allo_t *fallback);
+
+#ifndef ALLO_FREESTANDING
+/*
  * A thread-safe wrapper that adds a mutex around an existing allocator.
  *
  * It uses C11 `mtx_t` to ensure that only one thread can access the target
@@ -112,10 +114,9 @@ allo_error_t make_buddy_allocator(allo_t *out, allo_t *child, void *buffer,
 allo_error_t make_mtx_allocator(allo_t *out, allo_t *target);
 
 /*
- * A fallback allocator that tries a primary allocator first, then a secondary.
+ * Wraps the standard C library malloc/free functions.
  */
-allo_error_t make_fallback_allocator(allo_t *out, allo_t *primary,
-                                     allo_t *fallback);
+allo_error_t make_c_allocator(allo_t *out);
 
 /*
  * A high-performance, general-purpose allocator.
@@ -126,6 +127,7 @@ allo_error_t make_fallback_allocator(allo_t *out, allo_t *primary,
  * - Large objects (> 1MB) are handled directly by the page allocator.
  */
 allo_error_t make_gen_allocator(allo_t *out);
+#endif
 
 /**
  * Allocates memory using the provided allocator.
@@ -146,6 +148,9 @@ static inline void allo_free(allo_t *a, void *ptr, size_t size) {
 /**
  * Destroys the allocator, releasing any resources it holds. After this call,
  * using the allocator or any memory allocated by it is Undefined Behavior.
+ *
+ * Calling this function on an uninitialized allocator (or an allocator whose
+ * initialization failed) is Undefined Behavior.
  *
  * Note: Allocators that use a child allocator do NOT destroy the child
  * allocator when they are destroyed.

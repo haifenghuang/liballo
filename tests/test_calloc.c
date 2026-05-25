@@ -1,7 +1,5 @@
 #include "allo.h"
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include "test_harness.h"
 
 void test_calloc(void) {
   allo_t a;

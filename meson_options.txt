@@ -1,2 +1,2 @@
 option('benchmarks', type: 'boolean', value: true, description: 'Build benchmarks')
-option('freestanding', type: 'boolean', value: false, description: 'Build without linking to libc (freestanding mode)')
+option('freestanding', type: 'boolean', value: false, description: 'Build a freestanding library')

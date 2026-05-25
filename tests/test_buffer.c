@@ -1,8 +1,5 @@
 #include "allo.h"
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "test_harness.h"
 
 void test_buffer_validation(void) {
   printf("Testing Fixed Buffer Allocator: Validation\n");

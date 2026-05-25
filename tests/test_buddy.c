@@ -1,15 +1,12 @@
 #include "allo.h"
-#include <assert.h>
+#include "test_harness.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
 void test_buddy_basic(void) {
   printf("Testing Buddy Allocator: Basic\n");
-  allo_t c_alloc;
-  assert(make_c_allocator(&c_alloc) == ALLO_OK);
-  // 1MB buddy allocator
-  allo_t buddy;
+  allo_t c_alloc, buddy;
+  ALLO_ALIGNED_BUF(buffer, (1024 * 1024UL) + (128 * 1024UL));
+  assert(make_fixed_buf_allocator(&c_alloc, buffer, sizeof(buffer)) == ALLO_OK);
   assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 1024 * 1024UL) ==
          ALLO_OK);
 
@@ -46,10 +43,11 @@ void test_buddy_basic(void) {
 
 void test_buddy_alignment(void) {
   printf("Testing Buddy Allocator: Alignment\n");
-  allo_t c_alloc;
-  assert(make_c_allocator(&c_alloc) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, (64 * 1024UL) + (16 * 1024UL));
+  allo_t fixed;
+  assert(make_fixed_buf_allocator(&fixed, buffer, sizeof(buffer)) == ALLO_OK);
   allo_t buddy;
-  assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 64 * 1024UL) == ALLO_OK);
+  assert(make_buddy_allocator(&buddy, &fixed, NULL, 64 * 1024UL) == ALLO_OK);
 
   for (int i = 0; i < 100; ++i) {
     void *p = allo_alloc(&buddy, 1);
@@ -58,17 +56,16 @@ void test_buddy_alignment(void) {
   }
 
   allo_destroy(&buddy);
-  allo_destroy(&c_alloc);
+  allo_destroy(&fixed);
   printf("Alignment Buddy tests passed!\n");
 }
 
 void test_buddy_torture(void) {
   printf("Testing Buddy Allocator: Torture\n");
-  allo_t c_alloc;
-  assert(make_c_allocator(&c_alloc) == ALLO_OK);
-  // 128KB buddy allocator
-  allo_t buddy;
-  assert(make_buddy_allocator(&buddy, &c_alloc, NULL, 128 * 1024UL) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, 256 * 1024UL);
+  allo_t fixed, buddy;
+  assert(make_fixed_buf_allocator(&fixed, buffer, sizeof(buffer)) == ALLO_OK);
+  assert(make_buddy_allocator(&buddy, &fixed, NULL, 128 * 1024UL) == ALLO_OK);
 
   void *ptrs[1024];
   int count = 0;
@@ -106,14 +103,15 @@ void test_buddy_torture(void) {
   }
 
   allo_destroy(&buddy);
-  allo_destroy(&c_alloc);
+  allo_destroy(&fixed);
   printf("Buddy torture tests passed!\n");
 }
 
 void test_buddy_validation(void) {
   printf("Testing Buddy Allocator: Validation\n");
-  allo_t a, child;
-  assert(make_c_allocator(&child) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, 1024);
+  allo_t child, a;
+  assert(make_fixed_buf_allocator(&child, buffer, sizeof(buffer)) == ALLO_OK);
 
   assert(make_buddy_allocator(NULL, &child, NULL, 1024) == ALLO_ERR_INVAL);
   assert(make_buddy_allocator(&a, NULL, NULL, 1024) == ALLO_ERR_INVAL);

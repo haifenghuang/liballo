@@ -6,19 +6,21 @@ project(
     default_options: [
         'warning_level=3',
         'c_std=c11',
-        'b_lundef=false',
     ],
 )
 
 cc = meson.get_compiler('c')
 
-if get_option('freestanding')
-    add_project_arguments('-DALLO_NOSTDLIB', '-ffreestanding', language: 'c')
+opt_freestanding = get_option('freestanding')
+
+is_afl = cc.get_id() == 'clang' and cc.cmd_array()[0].contains('afl-clang')
+can_do_nostdlib = not is_afl and host_machine.cpu_family() == 'x86_64' and host_machine.system() == 'linux'
+
+if not opt_freestanding
+    threads_dep = dependency('threads', required: not get_option('freestanding'))
 endif
 
-threads_dep = dependency('threads', required: not get_option('freestanding'))
 liballo_headers = include_directories('include')
-
 install_headers('include/allo.h', subdir: 'liballo')
 
 subdir('src')

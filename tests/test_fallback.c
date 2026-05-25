@@ -1,6 +1,5 @@
 #include "allo.h"
-#include <assert.h>
-#include <string.h>
+#include "test_harness.h"
 
 int main(void) {
   allo_t primary, fallback, fb;

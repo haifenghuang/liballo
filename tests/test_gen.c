@@ -1,8 +1,5 @@
 #include "allo.h"
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "test_harness.h"
 
 void test_gen_basic(void) {
   printf("Testing General-Purpose Allocator: Basic\n");

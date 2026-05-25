@@ -77,14 +77,34 @@ static inline int get_order(size_t size) {
   size_t val = size - 1;
   int order = 0;
   if (sizeof(size_t) == 8) {
-    if (val & 0xFFFFFFFF00000000ULL) { val >>= 32; order += 32; }
+    if (val & 0xFFFFFFFF00000000ULL) {
+      val >>= 32;
+      order += 32;
+    }
   }
-  if (val & 0xFFFF0000U) { val >>= 16; order += 16; }
-  if (val & 0xFF00U) { val >>= 8; order += 8; }
-  if (val & 0xF0U) { val >>= 4; order += 4; }
-  if (val & 0xCU) { val >>= 2; order += 2; }
-  if (val & 0x2U) { val >>= 1; order += 1; }
-  if (val & 0x1U) { order += 1; }
+  if (val & 0xFFFF0000U) {
+    val >>= 16;
+    order += 16;
+  }
+  if (val & 0xFF00U) {
+    val >>= 8;
+    order += 8;
+  }
+  if (val & 0xF0U) {
+    val >>= 4;
+    order += 4;
+  }
+  if (val & 0xCU) {
+    val >>= 2;
+    order += 2;
+  }
+  if (val & 0x2U) {
+    val >>= 1;
+    order += 1;
+  }
+  if (val & 0x1U) {
+    order += 1;
+  }
   return order;
 #endif
 }

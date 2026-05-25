@@ -1,13 +1,14 @@
 #define _GNU_SOURCE
+
 #include "allo.h"
 #include "allo_asan.h"
 #include "allo_assert.h"
 #include "allo_mem.h"
 
-#ifdef ALLO_NOSTDLIB
-  #include "allo_page_x86.h"
-#else
+#ifndef ALLO_FREESTANDING
   #include "allo_page_posix.h"
+#else
+  #include "allo_page_x86.h"
 #endif
 
 typedef struct {

@@ -1,11 +1,10 @@
 #include "allo.h"
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include "test_harness.h"
 
 void test_arena_allocator(void) {
   allo_t child;
-  assert(make_c_allocator(&child) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, 8192);
+  assert(make_fixed_buf_allocator(&child, buffer, sizeof(buffer)) == ALLO_OK);
   allo_t a;
   assert(make_arena_allocator(&a, &child, 1024) == ALLO_OK);
   void *p1 = allo_alloc(&a, 100);
@@ -23,7 +22,8 @@ void test_arena_allocator(void) {
 
 void test_arena_stress(void) {
   allo_t child;
-  assert(make_c_allocator(&child) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, 256 * 1024);
+  assert(make_fixed_buf_allocator(&child, buffer, sizeof(buffer)) == ALLO_OK);
   allo_t a;
   assert(make_arena_allocator(&a, &child, 1024) == ALLO_OK);
   void *pointers[5000];
@@ -39,7 +39,8 @@ void test_arena_stress(void) {
 void test_arena_validation(void) {
   printf("Testing Arena Allocator: Validation\n");
   allo_t a, child;
-  assert(make_c_allocator(&child) == ALLO_OK);
+  ALLO_ALIGNED_BUF(buffer, 1024);
+  assert(make_fixed_buf_allocator(&child, buffer, sizeof(buffer)) == ALLO_OK);
 
   assert(make_arena_allocator(NULL, &child, 1024) == ALLO_ERR_INVAL);
   assert(make_arena_allocator(&a, NULL, 1024) == ALLO_ERR_INVAL);

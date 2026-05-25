@@ -1,7 +1,7 @@
 #ifndef ALLO_ASSERT_H
 #define ALLO_ASSERT_H
 
-#ifndef ALLO_NOSTDLIB
+#ifndef ALLO_FREESTANDING
   #include <assert.h>
   #define ALLO_ASSERT(x) assert(x)
 #else

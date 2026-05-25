@@ -1,19 +1,22 @@
-if not get_option('freestanding')
-    test_cases = [
-        'test_c',
-        'test_buffer',
-        'test_arena',
-        'test_pool',
-        'test_common',
-        'test_page',
-        'test_realloc',
-        'test_buddy',
-        'test_calloc',
-        'test_mtx',
-        'test_fallback',
-    ]
+freestanding_test_cases = [
+    'test_buffer',
+    'test_arena',
+    'test_pool',
+    'test_common',
+    'test_buddy',
+    'test_fallback',
+]
 
-    foreach t : test_cases
+hosted_test_cases = freestanding_test_cases + [
+    'test_page',
+    'test_realloc',
+    'test_calloc',
+    'test_mtx',
+    'test_c',
+]
+
+if not opt_freestanding
+    foreach t : hosted_test_cases
         exe = executable(
             t,
             t + '.c',
@@ -23,41 +26,31 @@ if not get_option('freestanding')
         )
         test(t, exe)
     endforeach
-endif
 
-
-# Fuzzer (Clang only)
-cc = meson.get_compiler('c')
-if cc.get_id() == 'clang' and not get_option('freestanding')
-    fuzz_args = []
-    if not get_option('b_coverage')
-        fuzz_args += ['-fsanitize=fuzzer', '-DFUZZING_DRIVER']
-    endif
     executable(
         'fuzz_allocator',
         'fuzz_allocator.c',
         include_directories: liballo_headers,
         link_with: liballo_lib,
-        c_args: fuzz_args,
-        link_args: fuzz_args,
     )
 endif
 
-# Special nostdlib test case (Linux x86_64 only)
-is_afl = cc.get_id() == 'clang' and cc.cmd_array()[0].contains('afl-clang')
-if not is_afl and host_machine.cpu_family() == 'x86_64' and host_machine.system() == 'linux'
-    # This test is manually freestanding so it's fine
-    test_page_nostdlib_exe = executable(
-        'test_page_nostdlib',
-        [
-            'test_page_nostdlib.c',
-            '../src/allo_page.c',
-            '../src/allo_utils.c',
-        ],
-        include_directories: liballo_headers,
-        c_args: ['-DALLO_NOSTDLIB', '-ffreestanding', '-fno-stack-protector'],
-        link_args: ['-nostdlib', '-static'],
-        override_options: ['b_sanitize=none', 'b_coverage=false'],
-    )
-    test('test_page_nostdlib', test_page_nostdlib_exe)
+if can_do_nostdlib
+    foreach t : freestanding_test_cases
+        exe = executable(
+            t + '_nostdlib',
+            [t + '.c', 'nolibc_start.c'],
+            include_directories: liballo_headers,
+            link_with: liballo_static,
+            c_args: [
+                '-DALLO_FREESTANDING',
+                '-DALLO_NOSTDLIB',
+                '-ffreestanding',
+                '-fno-stack-protector',
+            ],
+            link_args: ['-nostdlib', '-static'],
+            override_options: ['b_sanitize=none', 'b_coverage=false'],
+        )
+        test(t + '_nostdlib', exe)
+    endforeach
 endif

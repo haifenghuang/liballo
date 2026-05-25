@@ -1,8 +1,5 @@
 #include "allo.h"
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "test_harness.h"
 
 void test_realloc_common(allo_t *a, const char *name) {
   printf("Testing realloc for %s\n", name);
@@ -60,15 +57,18 @@ void test_buffer_realloc_inplace(void) {
 }
 
 int main(void) {
+#ifndef ALLO_NOSTDLIB
   allo_t c;
   assert(make_c_allocator(&c) == ALLO_OK);
   test_realloc_common(&c, "C Allocator");
+#endif
 
   char buf[2048];
   allo_t b;
   assert(make_fixed_buf_allocator(&b, buf, 2048) == ALLO_OK);
   test_realloc_common(&b, "Fixed Buffer");
 
+#ifndef ALLO_NOSTDLIB
   allo_t root;
   assert(make_c_allocator(&root) == ALLO_OK);
   allo_t arena;
@@ -86,6 +86,7 @@ int main(void) {
   allo_t page;
   assert(make_page_allocator(&page) == ALLO_OK);
   test_realloc_common(&page, "Page Allocator");
+#endif
 
   test_buffer_realloc_inplace();
 

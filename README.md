@@ -66,7 +66,7 @@ meson test -C build
   - **Fallback Allocator**: A compositor that tries a primary allocator first, then spills over to a secondary one.
 - **Containment API**: A tristate interface (`YES`, `NO`, `UNKNOWN`) to query if an allocator owns a specific pointer, enabling intelligent routing and realloc spillover.
 - **Internal Safety**: Specialized allocators use ownership checks as internal guards to prevent "pointer mixing" and accidental memory corruption.
-- **No-Stdlib Support**: Can be compiled without the standard C library (`ALLO_NOSTDLIB`) for embedded or kernel-space use.
+- **No-Stdlib Support**: Can be compiled without the standard C library (`ALLO_FREESTANDING`) for embedded or kernel-space use.
 
 ## Advanced Testing & Verification
 

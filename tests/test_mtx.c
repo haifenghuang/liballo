@@ -1,5 +1,6 @@
 #include "allo.h"
-#include <assert.h>
+#include "test_harness.h"
+
 #include <threads.h>
 
 #define THREAD_COUNT 4
