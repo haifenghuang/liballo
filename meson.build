@@ -10,9 +10,14 @@ project(
     ],
 )
 
+cc = meson.get_compiler('c')
 liballo_headers = include_directories('include')
 
 install_headers('include/allo.h', subdir: 'liballo')
 
 subdir('src')
 subdir('tests')
+
+if get_option('benchmarks')
+    subdir('benchmarks')
+endif
