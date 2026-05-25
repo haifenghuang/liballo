@@ -117,9 +117,9 @@ void *arena_realloc_fn(allo_t *self, void *ptr, size_t old_size,
 
 void arena_free_fn(allo_t *self, void *ptr, size_t size) {
   (void)self;
-  (void)ptr;
-  (void)size;
-  // Individual free is not supported in Arena
+  if (ptr) {
+    ALLOC_POISON(ptr, size);
+  }
 }
 
 void arena_destroy_fn(allo_t *self) {

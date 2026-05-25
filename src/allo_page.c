@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "allo.h"
+#include "asan.h"
 
 #ifdef ALLO_NOSTDLIB
   #include "allo_page_x86.c"
@@ -31,7 +32,10 @@ void *page_alloc_fn(allo_t *self, size_t size) {
   }
 
   *(size_t *)ptr = total_size;
-  return (char *)ptr + ctx->page_size;
+  void *user_ptr = (char *)ptr + ctx->page_size;
+  ALLOC_POISON(user_ptr, rounded_size);
+  ALLOC_UNPOISON(user_ptr, size);
+  return user_ptr;
 }
 
 void *page_realloc_fn(allo_t *self, void *ptr, size_t old_size,
@@ -45,18 +49,31 @@ void *page_realloc_fn(allo_t *self, void *ptr, size_t old_size,
   size_t total_new = rounded_new + ctx->page_size;
 
   if (total_old == total_new) {
+    if (new_size > old_size) {
+      ALLOC_UNPOISON((char *)ptr + old_size, new_size - old_size);
+    } else {
+      ALLOC_POISON((char *)ptr + new_size, old_size - new_size);
+    }
     return ptr;
   }
 
   void *real_start = (char *)ptr - ctx->page_size;
+  // Unpoison everything before realloc to avoid issues with mremap potentially
+  // reading/moving poisoned memory
+  ALLOC_UNPOISON(ptr, rounded_old);
   void *new_real_start = os_mremap(real_start, total_old, total_new);
 
   if (!new_real_start) {
+    // Restore poisoning on failure
+    ALLOC_POISON((char *)ptr + old_size, rounded_old - old_size);
     return NULL;
   }
 
   *(size_t *)new_real_start = total_new;
-  return (char *)new_real_start + ctx->page_size;
+  void *new_user_ptr = (char *)new_real_start + ctx->page_size;
+  ALLOC_POISON(new_user_ptr, rounded_new);
+  ALLOC_UNPOISON(new_user_ptr, new_size);
+  return new_user_ptr;
 }
 
 void page_free_fn(allo_t *self, void *ptr, size_t size) {
@@ -68,6 +85,8 @@ void page_free_fn(allo_t *self, void *ptr, size_t size) {
   size_t total_size = rounded_size + ctx->page_size;
   void *real_start = (char *)ptr - ctx->page_size;
 
+  // Unpoison before unmapping to be clean
+  ALLOC_UNPOISON(ptr, rounded_size);
   os_munmap(real_start, total_size);
 }
 

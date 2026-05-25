@@ -56,10 +56,12 @@ void pool_free_fn(allo_t *self, void *ptr, size_t size) {
   (void)size;
   pool_context_t *ctx = (pool_context_t *)self->_state;
   pool_free_node_t *node = (pool_free_node_t *)ptr;
+
+  ALLOC_POISON(node, ctx->block_size);
   ALLOC_UNPOISON(node, sizeof(pool_free_node_t));
+
   node->next = ctx->free_list;
   ctx->free_list = node;
-  ALLOC_POISON(node, ctx->block_size);
 }
 
 void pool_destroy_fn(allo_t *self) {
@@ -97,16 +99,20 @@ allo_error_t make_pool_allocator(allo_t *out, allo_t *child, void *buffer,
     ctx->buffer = buffer;
   }
 
+  ALLOC_POISON(ctx->buffer, ctx->block_size * total_blocks);
+
   // Initialize free list
   ctx->free_list = (pool_free_node_t *)ctx->buffer;
   pool_free_node_t *curr = ctx->free_list;
-  for (size_t i = 0; i < total_blocks - 1; ++i) {
-    curr->next = (pool_free_node_t *)((char *)curr + ctx->block_size);
-    curr = curr->next;
+  for (size_t i = 0; i < total_blocks; ++i) {
+    ALLOC_UNPOISON(curr, sizeof(pool_free_node_t));
+    if (i < total_blocks - 1) {
+      curr->next = (pool_free_node_t *)((char *)curr + ctx->block_size);
+      curr = (pool_free_node_t *)((char *)curr + ctx->block_size);
+    } else {
+      curr->next = NULL;
+    }
   }
-  curr->next = NULL;
-
-  ALLOC_POISON(ctx->buffer, ctx->block_size * ctx->total_blocks);
 
   return ALLO_OK;
 }

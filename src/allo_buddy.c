@@ -114,6 +114,7 @@ void buddy_free_fn(allo_t *self, void *ptr, size_t size) {
   size_t offset = (char *)ptr - (char *)ctx->buffer;
   size_t index = offset / (ctx->total_size >> level);
 
+  // Poison the whole block being freed
   ALLOC_POISON(ptr, ctx->total_size >> level);
 
   while (level >= 0) {
@@ -122,24 +123,25 @@ void buddy_free_fn(allo_t *self, void *ptr, size_t size) {
       set_bit(ctx->bitset, node_index(level, index));
       buddy_node_t *node = (buddy_node_t *)((char *)ctx->buffer +
                                             index * (ctx->total_size >> level));
+      // Unpoison only the header for the free list
       ALLOC_UNPOISON(node, sizeof(buddy_node_t));
       node->next = ctx->free_lists[level];
       ctx->free_lists[level] = node;
       break;
     }
 
+    // Buddy is free, merge it
     buddy_node_t **curr = &ctx->free_lists[level];
     void *buddy_ptr =
         (char *)ctx->buffer + buddy_idx * (ctx->total_size >> level);
     while (*curr && *curr != (buddy_node_t *)buddy_ptr) {
-      ALLOC_UNPOISON(*curr, sizeof(buddy_node_t));
       buddy_node_t *prev = *curr;
       curr = &(prev->next);
     }
     if (*curr) {
       buddy_node_t *to_remove = *curr;
-      ALLOC_UNPOISON(to_remove, sizeof(buddy_node_t));
       *curr = to_remove->next;
+      // Poison the header of the buddy we are removing from the free list
       ALLOC_POISON(to_remove, sizeof(buddy_node_t));
     }
     clear_bit(ctx->bitset, node_index(level, buddy_idx));
@@ -259,6 +261,7 @@ allo_error_t make_buddy_allocator(allo_t *out, allo_t *child, void *buffer,
   set_bit(ctx->bitset, node_index(0, 0));
 
   ALLOC_POISON(ctx->buffer, ctx->total_size);
+  ALLOC_UNPOISON(ctx->buffer, sizeof(buddy_node_t));
 
   return ALLO_OK;
 }

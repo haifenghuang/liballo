@@ -71,31 +71,15 @@ void *buf_realloc_fn(allo_t *self, void *ptr, size_t old_size,
 }
 
 void buf_free_fn(allo_t *self, void *ptr, size_t size) {
-#ifndef NDEBUG
-  allocator_buf_context_t *ctx = (allocator_buf_context_t *)self->_state;
-  // Only poison if the pointer is within the buffer range. This allows users to
-  // free pointers that were allocated from the buffer without worrying about
-  // double-freeing or freeing non-buffer pointers.
-  bool is_within_buffer = (char *)ptr >= (char *)ctx->buffer &&
-                          (char *)ptr < (char *)ctx->buffer + ctx->size;
-  if (is_within_buffer) {
+  (void)self;
+  if (ptr) {
     ALLOC_POISON(ptr, size);
   }
-
-#else
-  (void)self; // Unused
-  (void)ptr;  // Unused
-  (void)size; // Unused
-#endif
 }
 
 void buf_destroy_fn(allo_t *self) {
-#ifndef NDEBUG
   allocator_buf_context_t *ctx = (allocator_buf_context_t *)self->_state;
   ALLOC_POISON(ctx->buffer, ctx->size);
-#else
-  (void)self;
-#endif
 }
 
 // Factory to create a buffer allocator
