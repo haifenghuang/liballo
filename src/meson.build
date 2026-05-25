@@ -18,14 +18,16 @@ else
     deps += threads_dep
 endif
 
-liballo_lib = library(
-    'allo',
-    liballo_sources,
-    include_directories: liballo_headers,
-    dependencies: deps,
-    link_args: lib_link_args,
-    install: true,
-)
+if not opt_freestanding
+    liballo_lib = library(
+        'allo',
+        liballo_sources,
+        include_directories: liballo_headers,
+        dependencies: deps,
+        link_args: lib_link_args,
+        install: true,
+    )
+endif
 
 if can_do_nostdlib
     liballo_static = static_library(
