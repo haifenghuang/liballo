@@ -27,7 +27,7 @@ jobs:
         run: meson setup build --wipe --reconfigure -Db_sanitize=address,undefined -Dbuildtype=debug
 
       - name: Build
-        run: ninja -C build
+        run: ninja -C build -v
 
       - name: Run tests
         run: meson test -C build --print-errorlogs
@@ -56,6 +56,31 @@ jobs:
 
       - name: Run tests
         run: meson test -C build-freestanding --print-errorlogs
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build build-essential clang
+
+      - name: Install Meson
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install meson
+
+      - name: Configure build
+        run: meson setup build-bench --wipe --reconfigure -Dbuildtype=release
+
+      - name: Build benchmarks
+        run: ninja -C build-bench
+
+      - name: Run benchmarks
+        run: meson test -C build-bench --benchmark -v
 
   fuzz:
     # Only run fuzzing for pull requests (skip on push-to-main to keep main fast)
